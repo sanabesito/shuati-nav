@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>专业课刷题台 · 总入口</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231F4E5F'/%3E%3Cpath d='M6 18l4-10 3 6 3-4 2 8' fill='none' stroke='%23E07B39' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --steel:#1F4E5F; --steel-deep:#153A48; --steel-soft:#E4EDEF;
+  --amber:#E07B39; --amber-soft:#FBE9D9;
+  --paper:#F3EEE3; --card:#FDFBF4; --ink:#1B2A31; --line:#D8D2C2;
+  --ok:#3E7C5B;
+  --sans:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --serif:Georgia,"Times New Roman","Songti SC",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans); background:var(--paper); color:var(--ink);
+  min-height:100vh;
+  background-image:radial-gradient(rgba(31,78,95,.06) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 20px 60px}
+
+/* ===== 顶部 ===== */
+header{text-align:center;margin-bottom:30px}
+.kicker{
+  display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.16em;
+  color:var(--steel);font-weight:600;margin-bottom:12px;text-transform:uppercase;
+}
+.kicker svg{width:16px;height:16px;stroke:var(--amber);stroke-width:2;fill:none;stroke-linecap:round}
+h1{
+  font-family:var(--serif);font-size:34px;font-weight:700;color:var(--steel-deep);
+  letter-spacing:.02em;
+}
+.sub{font-size:14.5px;color:#5A6B72;margin-top:8px;line-height:1.7}
+.sub b{color:var(--steel);font-weight:600}
+
+/* ===== 统计条 ===== */
+.statbar{
+  display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:20px 0 30px;
+}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 18px;display:flex;flex-direction:column;align-items:center;min-width:104px;
+}
+.stat .n{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--steel)}
+.stat .l{font-size:12px;color:#6B7A80;margin-top:2px}
+
+/* ===== 课程卡片 ===== */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{
+  position:relative;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:24px 22px 20px;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;gap:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.7),0 4px 14px rgba(31,46,55,.06);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(31,46,55,.12);border-color:var(--steel)}
+.card:active{transform:translateY(0)}
+.ctop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cnum{
+  font-family:var(--serif);font-size:13px;color:#96A5AB;letter-spacing:.05em;white-space:nowrap;
+}
+.icon{
+  width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  flex:none;
+}
+.icon svg{width:26px;height:26px;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.c1 .icon{background:#E4EDEF}.c1 .icon svg{stroke:var(--steel)}
+.c2 .icon{background:#E8E2EF}.c2 .icon svg{stroke:#6A4E8F}
+.c3 .icon{background:#FBE9D9}.c3 .icon svg{stroke:var(--amber)}
+.cname{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--steel-deep)}
+.tag{
+  display:inline-block;font-size:11.5px;padding:3px 10px;border-radius:20px;font-weight:600;
+  background:var(--steel-soft);color:var(--steel);margin-top:2px;
+}
+.c3 .tag{background:var(--amber-soft);color:#A8561F}
+.meta{font-size:13px;color:#55666D;line-height:1.75}
+.meta b{color:var(--steel);font-weight:600}
+.arrow{
+  margin-top:auto;display:inline-flex;align-items:center;gap:6px;
+  font-size:13.5px;font-weight:600;color:var(--amber);
+}
+.arrow svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s ease}
+.card:hover .arrow svg{transform:translateX(3px)}
+.go{
+  display:block;text-align:center;margin-top:2px;padding:11px 0;border-radius:11px;
+  background:var(--steel);color:#fff;font-size:14px;font-weight:600;
+  box-shadow:0 3px 0 var(--steel-deep);
+}
+.card:hover .go{background:#28657A}
+.c3 .go{background:var(--amber);box-shadow:0 3px 0 #B85E24}
+.c3:hover .go{background:#E98B4F}
+
+/* ===== 底部说明 ===== */
+.note{
+  margin-top:34px;background:var(--card);border:1px dashed var(--line);
+  border-radius:14px;padding:16px 20px;font-size:13px;color:#6B7A80;line-height:1.8;
+}
+.note b{color:var(--steel)}
+.note .sep{color:#C9C2B0;padding:0 6px}
+
+/* ===== 移动端优先布局 ===== */
+@media (max-width:860px){
+  .grid{grid-template-columns:1fr 1fr}
+  h1{font-size:29px}
+}
+@media (max-width:420px){
+  .grid{grid-template-columns:1fr}
+  .wrap{padding:26px 16px 44px}
+  h1{font-size:26px}
+  .sub{font-size:13.5px}
+  .stat{min-width:88px;padding:8px 12px}
+  .stat .n{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">
+    <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M4 19l5-7 4 3 6-8"/></svg>
+    专业课程 · 复习入口
+  </div>
+  <h1>专业课刷题台</h1>
+  <div class="sub">总入口 · 依据各课程课件整理 · <b>点击卡片直达对应刷题台</b>，做题记录保存在各自页面本地浏览器</div>
+  <div class="statbar">
+    <div class="stat"><div class="n">3</div><div class="l">课程刷题台</div></div>
+    <div class="stat"><div class="n">661</div><div class="l">总题量</div></div>
+    <div class="stat"><div class="n">28</div><div class="l">章节覆盖</div></div>
+  </div>
+</header>
+
+<main class="grid">
+
+  <a class="card c1" href="https://sanabesito.github.io/cailiaoxingneng-shuati/" target="_blank" rel="noopener">
+    <div class="ctop">
+      <div class="cname">材料性能学</div>
+      <span class="cnum">01</span>
+    </div>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M5 16h14M8 3h8"/><path d="M4 12h16"/></svg></div>
+    <span class="tag">十 章 全 覆 盖</span>
+    <div class="meta">单选 · 填空 · 简答辨析<br><b>278 题</b> · 10 章 · 含知识框架与 Word 复习资料</div>
+    <span class="go">进入刷题台</span>
+  </a>
+
+  <a class="card c2" href="https://sanabesito.github.io/materials-shuati/" target="_blank" rel="noopener">
+    <div class="ctop">
+      <div class="cname">工程材料A</div>
+      <span class="cnum">02</span>
+    </div>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
+    <span class="tag">真 题 专 练</span>
+    <div class="meta">单选 · 填空 · 简答辨析<br><b>227 题</b> · 12 章 · 真题专练</div>
+    <span class="go">进入刷题台</span>
+  </a>
+
+  <a class="card c3" href="https://sanabesito.github.io/hanjie-shuati/" target="_blank" rel="noopener">
+    <div class="ctop">
+      <div class="cname">弧焊电源</div>
+      <span class="cnum">03</span>
+    </div>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M8 8v8M8 12h8"/><path d="M4 12h16"/><path d="M7 5l10 14M17 5L7 19"/></svg></div>
+    <span class="tag">六 章 全 覆 盖</span>
+    <div class="meta">单选 · 填空 · 简答辨析<br><b>156 题</b> · 6 章 · 含知识框架与 Word 复习资料</div>
+    <span class="go">进入刷题台</span>
+  </a>
+
+</main>
+
+<div class="note">
+  <b>使用说明</b>：手机打开即进入随机刷题；底部 Tab 可在随机 / 章节 / 错题 / 收藏 / 统计间切换；桌面端侧栏按章节刷题。
+  <span class="sep">·</span> 每门课程的刷题记录（作答、错题、收藏）仅保存在该课程页面本机浏览器中，互不干扰。
+  <span class="sep">·</span> 题量与章节数据依据各课程最新整理版本。
+</div>
+
+</div>
+</body>
+</html>
