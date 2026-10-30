@@ -72,6 +72,8 @@ h1{
 .c1 .icon{background:#E4EDEF}.c1 .icon svg{stroke:var(--steel)}
 .c2 .icon{background:#E8E2EF}.c2 .icon svg{stroke:#6A4E8F}
 .c3 .icon{background:#FBE9D9}.c3 .icon svg{stroke:var(--amber)}
+.c4 .icon{background:#E7EFF2}.c4 .icon svg{stroke:#3E7C5B}
+.c5 .icon{background:#F3E4E1}.c5 .icon svg{stroke:#A34A3C}
 .cname{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--steel-deep)}
 .tag{
   display:inline-block;font-size:11.5px;padding:3px 10px;border-radius:20px;font-weight:600;
@@ -104,11 +106,7 @@ h1{
 .note .sep{color:#C9C2B0;padding:0 6px}
 
 /* ===== 移动端优先布局 ===== */
-@media (max-width:860px){
-  .grid{grid-template-columns:1fr 1fr}
-  h1{font-size:29px}
-}
-@media (max-width:420px){
+@media (max-width:620px){
   .grid{grid-template-columns:1fr}
   .wrap{padding:26px 16px 44px}
   h1{font-size:26px}
@@ -129,9 +127,9 @@ h1{
   <h1>专业课刷题台</h1>
   <div class="sub">总入口 · 依据各课程课件整理 · <b>点击卡片直达对应刷题台</b>，做题记录保存在各自页面本地浏览器</div>
   <div class="statbar">
-    <div class="stat"><div class="n">3</div><div class="l">课程刷题台</div></div>
-    <div class="stat"><div class="n">661</div><div class="l">总题量</div></div>
-    <div class="stat"><div class="n">28</div><div class="l">章节覆盖</div></div>
+    <div class="stat"><div class="n">5</div><div class="l">课程刷题台</div></div>
+    <div class="stat"><div class="n">1137</div><div class="l">总题量</div></div>
+    <div class="stat"><div class="n">41</div><div class="l">章节覆盖</div></div>
   </div>
 </header>
 
@@ -167,6 +165,28 @@ h1{
     <div class="icon"><svg viewBox="0 0 24 24"><path d="M8 8v8M8 12h8"/><path d="M4 12h16"/><path d="M7 5l10 14M17 5L7 19"/></svg></div>
     <span class="tag">六 章 全 覆 盖</span>
     <div class="meta">单选 · 填空 · 简答辨析<br><b>156 题</b> · 6 章 · 含知识框架与 Word 复习资料</div>
+    <span class="go">进入刷题台</span>
+  </a>
+
+  <a class="card c4" href="https://sanabesito.github.io/hanjieyuanli-shuati/" target="_blank" rel="noopener">
+    <div class="ctop">
+      <div class="cname">焊接原理</div>
+      <span class="cnum">04</span>
+    </div>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 14h6v6h-6z"/><path d="M8 8l8 8"/><path d="M16 8l-8 8"/></svg></div>
+    <span class="tag">材 料 连 接 与 增 材 制 造</span>
+    <div class="meta">单选 · 填空<br><b>265 题</b> · 6 章 · 原版恢复</div>
+    <span class="go">进入刷题台</span>
+  </a>
+
+  <a class="card c5" href="https://sanabesito.github.io/dianlidianzi-shuati/" target="_blank" rel="noopener">
+    <div class="ctop">
+      <div class="cname">电力电子技术</div>
+      <span class="cnum">05</span>
+    </div>
+    <div class="icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></div>
+    <span class="tag">器 件 · 变 换 电 路</span>
+    <div class="meta">单选 · 填空<br><b>211 题</b> · 7 章 · 含移动端适配</div>
     <span class="go">进入刷题台</span>
   </a>
 
