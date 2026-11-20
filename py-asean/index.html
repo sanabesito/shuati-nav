@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>公选课刷题台 · Python 与 走进东盟</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1c2333; --sub:#6b7385; --line:#e6eaf2;
+    --brand:#3b6ef6; --brand-soft:#e8f0fe; --ok:#18a058; --ok-soft:#e6f6ec;
+    --bad:#e5484d; --bad-soft:#fdecec; --warn:#f59e0b; --radius:16px;
+    --tab-h:58px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow-x:hidden;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding-bottom:calc(var(--tab-h) + 18px + env(safe-area-inset-bottom,0px));
+  }
+  header{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    padding:14px 16px 8px;
+  }
+  header h1{font-size:18px; font-weight:700;}
+  header p{font-size:12px; color:var(--sub); margin-top:3px;}
+  .chips{display:flex; gap:8px; overflow-x:auto; padding:8px 16px; scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto; min-height:44px; display:flex; align-items:center; padding:0 14px;
+    border-radius:22px; background:#fff; border:1px solid var(--line); font-size:13px; color:var(--sub);
+    cursor:pointer;
+  }
+  .chip.active{background:var(--brand); color:#fff; border-color:var(--brand); font-weight:600;}
+  .wrap{padding:0 16px;}
+  .card{
+    background:var(--card); border-radius:var(--radius); padding:18px 16px;
+    box-shadow:0 2px 12px rgba(20,40,90,.06); margin-bottom:14px;
+  }
+  .meta{display:flex; align-items:center; gap:8px; margin-bottom:12px;}
+  .tag{font-size:11px; padding:3px 9px; border-radius:10px; background:var(--brand-soft); color:var(--brand);}
+  .tag.judge{background:#f3e8ff; color:#8b3ff0;}
+  .tag.multi{background:#fff3e0; color:#e08a00;}
+  .qno{font-size:12px; color:var(--sub);}
+  .qtext{font-size:16px; line-height:1.65; font-weight:600; margin-bottom:14px;}
+  .opts{display:flex; flex-direction:column; gap:10px;}
+  .opt{
+    min-height:44px; display:flex; align-items:flex-start; gap:10px; padding:11px 12px;
+    border:1px solid var(--line); border-radius:12px; font-size:14px; line-height:1.5; cursor:pointer;
+  }
+  .opt .key{flex:0 0 22px; height:22px; border-radius:6px; background:#f0f2f7; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--sub);}
+  .opt.sel{border-color:var(--brand); background:var(--brand-soft);}
+  .opt.sel .key{background:var(--brand); color:#fff;}
+  .opt.correct{border-color:var(--ok); background:var(--ok-soft);}
+  .opt.correct .key{background:var(--ok); color:#fff;}
+  .opt.wrong{border-color:var(--bad); background:var(--bad-soft);}
+  .opt.wrong .key{background:var(--bad); color:#fff;}
+  .opt.disabled{cursor:default;}
+  .answer-box{margin-top:14px; padding:12px 13px; border-radius:12px; background:#f7f9fc; font-size:13px; line-height:1.6; display:none;}
+  .answer-box.show{display:block;}
+  .answer-box .ans{font-weight:700; color:var(--ok);}
+  .answer-box .note{color:var(--sub); margin-top:4px;}
+  .actions{display:flex; gap:10px; margin-top:16px;}
+  .btn{
+    flex:1; min-height:44px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer;
+  }
+  .btn.primary{background:var(--brand); color:#fff;}
+  .btn.ghost{background:#fff; color:var(--brand); border:1px solid var(--brand);}
+  .btn.warn{background:var(--bad-soft); color:var(--bad);}
+  .progress{height:6px; background:#e9edf5; border-radius:6px; overflow:hidden; margin:6px 0 14px;}
+  .progress i{display:block; height:100%; background:var(--brand); width:0; transition:width .25s;}
+  .stat-row{display:flex; gap:10px;}
+  .stat-box{flex:1; background:#fff; border-radius:14px; padding:16px 12px; text-align:center;}
+  .stat-box .num{font-size:22px; font-weight:700; color:var(--brand);}
+  .stat-box .lbl{font-size:12px; color:var(--sub); margin-top:4px;}
+  .empty{text-align:center; color:var(--sub); padding:60px 20px; font-size:14px;}
+  /* 底部 TabBar */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; height:var(--tab-h); background:#fff;
+    border-top:1px solid var(--line); display:flex; z-index:30;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .tabbar button{
+    flex:1; background:none; border:none; min-height:var(--tab-h); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px; font-size:11px; color:var(--sub); cursor:pointer;
+  }
+  .tabbar button.active{color:var(--brand); font-weight:600;}
+  .tabbar .ico{font-size:19px;}
+  /* 章节弹层 */
+  .sheet-mask{position:fixed; inset:0; background:rgba(15,25,50,.4); z-index:40; display:none;}
+  .sheet-mask.show{display:block;}
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; background:#fff; border-radius:20px 20px 0 0; z-index:41;
+    max-height:70vh; overflow-y:auto;
+    padding:16px 16px calc(var(--tab-h) + 16px + env(safe-area-inset-bottom,0px)); display:none;
+  }
+  .sheet.show{display:block;}
+  .sheet h3{font-size:15px; margin-bottom:12px;}
+  .sheet .item{
+    min-height:48px; display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    border-bottom:1px solid var(--line); font-size:14px; cursor:pointer;
+  }
+  .sheet .item.active{color:var(--brand); font-weight:600;}
+  .sheet .item .cnt{font-size:12px; color:var(--sub);}
+  .course-switch{display:flex; gap:10px; margin-bottom:6px;}
+  .course-switch .chip{min-height:40px;}
+  @media (min-width:760px){
+    .wrap{max-width:720px; margin:0 auto;}
+  }
+  @media (max-width:380px){
+    header h1{font-size:17px;}
+    .qtext{font-size:15px;}
+    .opt{font-size:13.5px; padding:10px 11px;}
+    .stat-box .num{font-size:20px;}
+    .chip{font-size:12.5px; padding:0 12px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>公选课刷题台</h1>
+  <p>Python语言基础与应用 · 走进东盟 ｜ 默认隐藏答案，作答后对照</p>
+</header>
+
+<div class="chips" id="courseChips"></div>
+<div class="chips" id="chapterChips"></div>
+
+<div class="wrap" id="main"></div>
+
+<div class="tabbar">
+  <button data-tab="quiz" class="active"><span class="ico">✍️</span>刷题</button>
+  <button data-tab="wrong"><span class="ico">📕</span>错题本</button>
+  <button data-tab="chapter"><span class="ico">📑</span>章节</button>
+  <button data-tab="stat"><span class="ico">📊</span>统计</button>
+</div>
+
+<div class="sheet-mask" id="sheetMask"></div>
+<div class="sheet" id="chapterSheet"></div>
+
+<script>
+/* ===================== 题库数据 =====================
+   type: single 单选 / multi 多选 / judge 判断(A=正确 B=错误)
+   ans: 正确选项字母数组
+*/
+const DATA = [
+{
+  id:"asean", name:"走进东盟",
+  chapters:[
+  { name:"总论 · 东盟概况", qs:[
+    {t:"single", q:"东盟是东南亚联盟的简称，它包括东南亚10家成员国，分别是？", o:["印度尼西亚、马来西亚、菲律宾、新加坡、泰国、文莱、越南、老挝、缅甸和柬埔寨","东帝汶、马来西亚、菲律宾、新加坡、泰国、文莱、越南、老挝、缅甸和柬埔寨","日本、马来西亚、菲律宾、新加坡、泰国、文莱、越南、老挝、缅甸和柬埔寨","印度、马来西亚、菲律宾、新加坡、泰国、文莱、越南、老挝、缅甸和柬埔寨"], a:["A"]},
+    {t:"single", q:"中国与东盟在陆地毗邻而居的国家有哪些？", o:["泰国、老挝、缅甸","越南、老挝、缅甸","马来西亚、老挝、缅甸","新加坡、马来西亚、老挝"], a:["B"]},
+    {t:"single", q:"东盟各国大部分属于什么样的气候地区？", o:["温带地区","热带地区","亚热带地区","介于温带与热带之间"], a:["B"]},
+    {t:"single", q:"东南亚地区分为两大板块，分别是？", o:["中南半岛和朝鲜半岛","中南半岛和马来半岛","中南半岛和南亚半岛","阿拉伯半岛和马来半岛"], a:["B"]},
+    {t:"single", q:"马六甲海峡是沟通哪两大海洋的天然水道？", o:["太平洋和印度洋","太平洋和大西洋","太平洋和北冰洋","大西洋和印度洋"], a:["A"]},
+    {t:"single", q:"下列对东盟文化的评价，哪种说法正确？", o:["东盟国家文化是东方文化的缩影","是西方文化的缩影","既是东方文化的缩影，也是西方文化的缩影"], a:["C"]},
+    {t:"multi", q:"郑和下西洋对东盟文化有哪些影响？", o:["语言文字","思想意识","社会政制等许多方面","建筑艺术等"], a:["A","B","C","D"]},
+    {t:"multi", q:"东盟国家中哪几个国家受佛教文化影响最深？", o:["柬埔寨、老挝","泰国、缅甸","越南、新加坡"], a:["A","B"]},
+    {t:"multi", q:"东盟地区长期受到哪些文明的影响？", o:["中国","印度和阿拉伯","欧洲"], a:["A","B"]},
+    {t:"multi", q:"东盟国家的文化在形成过程中，受到了哪些文化的冲击？", o:["殖民地文化","西方文化的冲击"], a:["A","B"]},
+    {t:"single", q:"东盟10国现拥有多少人口？", o:["6.2亿人","5亿人","8亿人"], a:["A"]},
+    {t:"single", q:"东盟秘书处设在哪个城市？", o:["马尼拉","雅加达","曼谷","河内"], a:["B"]},
+    {t:"single", q:"东盟国家中哪些国家相对落后？", o:["缅甸、柬埔寨、老挝","越南、泰国","新加坡、马来西亚"], a:["A"]},
+    {t:"multi", q:"东盟地区分为哪几个区域？", o:["中南半岛区域","马来半岛区域","阿拉伯半岛"], a:["A","B"]},
+    {t:"multi", q:"东盟的宗旨和目标是？", o:["本着平等与合作精神，共同努力促进地区内的经济增长、社会进步和文化发展","为建立一个繁荣、和平的东南亚国家共同体奠定基础，以促进东南亚地区的和平与稳定","共同抵抗来自欧美国家的入侵和经济渗透","构建区域经济一体化"], a:["A","B"]},
+  ]},
+  { name:"东盟文化与风光", qs:[
+    {t:"single", q:"以儒家文化为主流文化的国家分别是？", o:["越南、新加坡","越南、泰国"], a:["A"]},
+    {t:"single", q:"以伊斯兰教文化为主流文化的国家分别是？", o:["缅甸、马来西亚、文莱","印尼、马来西亚、文莱","菲律宾、马来西亚、文莱","越南、马来西亚、新加坡"], a:["B"]},
+    {t:"single", q:"儒家文化来源于哪个国家？", o:["中国","印度","马来西亚"], a:["A"]},
+    {t:"single", q:"哪个国家是以基督教文化为主体的国家？", o:["马来西亚","菲律宾","印度","中国"], a:["B"]},
+    {t:"single", q:"汉文化在越南的影响力长达多少年？", o:["500年","1000年以上","300年","800年"], a:["B"]},
+    {t:"single", q:"被誉为“海上桂林”的越南城市是？", o:["河内","下龙湾","芽庄"], a:["B"]},
+    {t:"single", q:"柬埔寨灿烂文化的标志是？", o:["吴哥文化","佛教文化","宫廷文化"], a:["A"]},
+    {t:"single", q:"新加坡的标志建筑是？", o:["圣安德烈教堂","鱼尾狮像","新加坡国家博物馆"], a:["B"]},
+    {t:"multi", q:"为什么说东盟区域成为世界旅游天堂之一？", o:["东盟各国因其独特的地理优势","有奇特的海岛和热带雨林旅游资源","有丰富的人文景观和民俗文化","旅游费用便宜"], a:["A","B","C"]},
+    {t:"multi", q:"为什么说缅甸蒲甘是缅甸东方文化的瑰宝？", o:["蒲甘的佛塔集缅甸一切建筑艺术形式之大成","塔内浮雕壁画以佛教内容为主，雕刻绘画技艺精巧","是缅甸蒲甘王朝的首都"], a:["A","B","C"]},
+    {t:"single", q:"东盟哪个国家的藤编工艺有特色？", o:["越南、泰国","印尼、新加坡","菲律宾、马来西亚"], a:["C"]},
+    {t:"single", q:"哪个国家的皮偶人物造型稚拙有趣？", o:["越南","印尼","泰国"], a:["B"]},
+    {t:"multi", q:"为传承民族文化和艺术，东盟的艺术家们建议？", o:["合作保护文物和有重要历史意义的作品","保护能代表国家历史、在建筑学/考古学/人类学领域有重要价值的文化遗产","对历史遗迹、文物景观和风景名胜进行鉴定、确认和保护"], a:["A","B","C"]},
+    {t:"multi", q:"东盟各国的建筑文化是受哪些国家的影响？", o:["中国","印度","欧洲","美国"], a:["A","B","C"]},
+    {t:"multi", q:"东盟哪些国家的民族舞蹈具有一定的民族特色？", o:["柬埔寨、泰国","缅甸、印尼","菲律宾"], a:["A","B","C"]},
+  ]},
+  { name:"越南", qs:[
+    {t:"single", q:"越南的国土形状就像一个什么字母形状？", o:["L","S","T","P"], a:["B"]},
+    {t:"single", q:"越南现人口总数达到了多少万人？", o:["近6000万人","近9050万人","近8000万人","超过1亿人"], a:["B"]},
+    {t:"single", q:"越南实行什么社会制度？", o:["君主立宪制度","以共产党为领导的一党制人民代表大会制度","资本主义制度","民主共和制"], a:["B"]},
+    {t:"single", q:"越南的北部与哪个国家相邻？", o:["泰国","老挝","中国","缅甸"], a:["C"]},
+    {t:"multi", q:"越南被誉为“金山银海”的国度，“金山”和“银海”指的是什么？", o:["丰富的森林资源、矿产资源","农业资源","海洋资源","金矿资源"], a:["A","B","C"]},
+    {t:"single", q:"越南南方全部解放是哪一年？", o:["1975年5月","1976年5月","1955年5月","1974年5月"], a:["A"]},
+    {t:"single", q:"从公元前3世纪晚期至10世纪前期，越南处于哪个国家的统治之下？", o:["美国","泰国","中国","日本"], a:["C"]},
+    {t:"single", q:"1986年越共领导人黎笋死后，实行什么政策？", o:["维持现状","革新开放","与中国对抗"], a:["B"]},
+    {t:"single", q:"19世纪中叶以后，哪个国家开始侵略蚕食越南？", o:["美国","法国","日本","泰国"], a:["B"]},
+    {t:"multi", q:"在历史上，为什么说中越关系十分特殊？", o:["山水相连的友好邻邦，两国人民友谊源远流长","两国人民在争取国家独立和民族解放斗争中相互支持、患难与共","越南出于自身海上利益考虑，加之外部国家对南海问题的干涉，中越关系发展将面临复杂多变趋势","越南经济落后，发展完全依赖中国"], a:["A","B","C"]},
+    {t:"single", q:"绿帽是越南男人的特殊服饰，这种帽子造型来自哪个国家的礼帽？", o:["英国","中国","法国"], a:["C"]},
+    {t:"single", q:"什么宗教对越南的思想、文化、教育、风俗习惯等方面产生了巨大影响？", o:["佛教","儒教","伊斯兰教"], a:["B"]},
+    {t:"multi", q:"受中国传统文化影响，越南的传统节日有？", o:["春节","清明节","雄王节","中秋节"], a:["A","B","D"]},
+    {t:"multi", q:"关于越南饮食文化，如下哪种说法正确？", o:["以大米为主食，口味清淡，喜欢吃生冷食物","受中国文化和法国文化的影响","具有本民族特色，没有任何外来饮食文化元素"], a:["A","B"]},
+    {t:"multi", q:"越南文化特色是？", o:["东西交融、兼容并举","保持自己的民族特色，又吸纳其他民族的文化精髓","排斥外来文化"], a:["A","B"]},
+    {t:"single", q:"越南“奥黛”类似于哪个国家的传统服装？", o:["中国旗袍","日本和服","泰式服装"], a:["A"]},
+    {t:"single", q:"今天看到的“奥黛”样式大概是在上世纪哪个年代最终确定的？", o:["60年代","30年代","90年代"], a:["B"]},
+    {t:"multi", q:"越南奥黛常被用作女性公务人员标准制服，哪些行业选用奥黛？", o:["旅馆接待","新闻主播","航空公司空姐","女学生校服"], a:["A","B","C","D"]},
+    {t:"multi", q:"越南“奥黛”在哪些重要场合穿着？", o:["婚礼上","节日里","重要庆典"], a:["A","B","C"]},
+    {t:"multi", q:"越南奥黛是融合多种文化的产物，以下说法哪种正确？", o:["加入了不少少数民族元素","历史上曾受到中国的巨大影响","受到美国文化的影响"], a:["A","B","C"]},
+    {t:"single", q:"越南历史上的第一所最高学府是？", o:["河内文庙","越南历史博物馆","越南国家大学"], a:["A"]},
+    {t:"single", q:"电影《情人》反映的是越南哪个城市的生活？", o:["河内","胡志明","海防"], a:["B"]},
+    {t:"single", q:"越南什么地方被联合国教科文组织列入了世界文化遗产名录？", o:["河内和胡志明","芽庄和岘港","会安和美山"], a:["C"]},
+    {t:"single", q:"2011年“世界新七大自然奇观”公布，哪个越南名胜榜上有名？", o:["河内西湖","下龙湾","芽庄海滩"], a:["B"]},
+    {t:"multi", q:"越南从北到南“越南越美”，是因为哪些越往南越富有特色？", o:["山水美景","海滨风光","异域文化和历史古迹","古代建筑"], a:["A","B","C"]},
+  ]},
+  { name:"泰国", qs:[
+    {t:"single", q:"泰国旧名是什么？", o:["泰国","暹罗","自由王国"], a:["B"]},
+    {t:"single", q:"下面哪种说法正确？", o:["佛教是泰国国教，90%的人信奉佛教","泰国大多数人信奉伊斯兰教","泰国大多数人不信宗教"], a:["A"]},
+    {t:"single", q:"泰国是一个什么样的国家？", o:["位于东南亚的君主立宪制国家","社会主义国家","资本主义国家","总统制国家"], a:["A"]},
+    {t:"multi", q:"泰国在世界上素有哪些称誉？", o:["“佛教之国”","“大象之国”","“微笑之国”","“人妖之国”"], a:["A","B","C"]},
+    {t:"multi", q:"泰国位于中南半岛中南部，与哪些国家相邻？", o:["与中国相邻","与柬埔寨、老挝相邻","缅甸、马来西亚接壤","与新加坡相邻"], a:["B","C"]},
+    {t:"single", q:"第二次世界大战后，泰国成为哪个国家在东南亚的军事同盟国？", o:["英国","日本","美国","德国"], a:["C"]},
+    {t:"single", q:"泰国有多少年的历史？", o:["700多年","100多年","1000年以上"], a:["A"]},
+    {t:"multi", q:"泰国王朝先后经历了哪几个王朝？", o:["素可泰王朝、大城王朝","吞武里王朝","曼谷王朝"], a:["A","B","C"]},
+    {t:"multi", q:"泰国历史进入现代时期，先后经历了？", o:["军政府时期","民主时期","共和时期"], a:["A","B"]},
+    {t:"single", q:"泰国传统年节是？", o:["宋干节","万佛节","元旦"], a:["A"]},
+    {t:"single", q:"什么文化对泰国的民俗文化产生了深刻影响？", o:["基督教文化","佛教文化","伊斯兰文化","儒教文化"], a:["B"]},
+    {t:"single", q:"泰国被誉为“微笑国度”，人们见面时常行？", o:["握手礼","拥抱礼","合十礼","亲吻礼"], a:["C"]},
+    {t:"single", q:"泰族男子的传统民族服装是？", o:["西装","纱笼","中山装"], a:["B"]},
+    {t:"multi", q:"与泰国人交往时，以下哪种行为不礼貌？", o:["非议佛教","高声喧哗、大喊大叫","女性不得与僧侣握手或递送物品","不忌讳别人触摸头部"], a:["A","B","D"]},
+    {t:"single", q:"泰国以外的泰式餐厅遍及世界各地，其中有3000家在？", o:["中国","美国","日本"], a:["B"]},
+    {t:"single", q:"泰国四大菜系是？", o:["东北部、北部、中部和南部","东北部、西部、中部、南部","南部、东部、西部、东北部"], a:["A"]},
+    {t:"single", q:"从17世纪开始，泰国饮食逐渐受到哪些国家饮食文化的影响？", o:["中国、日本","葡萄牙、荷兰","法国"], a:["B"]},
+    {t:"single", q:"泰国菜的特色是？", o:["甜味","酸辣","清淡"], a:["B"]},
+    {t:"multi", q:"泰国饮食与中国菜存在同质之处，以下说法哪种正确？", o:["稻米、鱼虾等食材的运用","烤、炒等烹调方式","咖喱菜肴"], a:["A","B"]},
+    {t:"single", q:"被誉为“天使之城”的泰国城市是？", o:["清迈","曼谷","清莱"], a:["B"]},
+    {t:"single", q:"被称为“东方性都”的旅游名胜地是？", o:["芭提雅","曼谷","清莱"], a:["A"]},
+    {t:"judge", q:"泰国传统年节是宋干节。", a:["A"]},
+    {t:"judge", q:"被称为“东方性都”的旅游名胜地是芭提雅。", a:["A"]},
+    {t:"judge", q:"泰国以外的泰式餐厅有3000家在中国。", a:["B"]},
+  ]},
+  { name:"马来西亚", qs:[
+    {t:"single", q:"早在600多年前，郑和七下西洋，五次到访何地？", o:["新加坡","马六甲","吉隆坡","菲律宾"], a:["B"]},
+    {t:"single", q:"马来西亚联邦被南中国海分为两个部分，分别是？", o:["位于马来半岛的西马来西亚以及东马来西亚","新加坡和西马","新加坡和东马","文莱和新加坡"], a:["A"]},
+    {t:"single", q:"马来西亚实行什么样的社会制度？", o:["君主立宪制","社会主义制度","共和制","议会制"], a:["A"]},
+    {t:"single", q:"马来西亚历史上的第一个封建王国称为？", o:["马六甲王国","马来王国","沙捞越王国","马哈王国"], a:["A"]},
+    {t:"single", q:"1945年8月日本投降后，哪个国家殖民军卷土重来，使马来西亚重新沦为殖民地？", o:["美国","英国","葡萄牙","荷兰"], a:["B"]},
+    {t:"multi", q:"马来西亚的华人很多信仰宗教，其主要信奉？", o:["佛教","伊斯兰教","儒教","基督教"], a:["A","C"]},
+    {t:"multi", q:"人们称马来西亚为旅游天堂的理由是？", o:["拥有永恒的夏天和永恒的阳光","古老的民俗民风","悠久的历史文化遗迹以及现代化的都市","对世界各国实施旅游免签"], a:["A","B","C"]},
+    {t:"multi", q:"马来西亚旅游业成功发展的重要原因之一是？", o:["倡导传统与现代旅游项目融合发展","崇尚和谐理念，善于化解与融合不同文明的差异与冲突","发展博彩旅游"], a:["A","B"]},
+    {t:"judge", q:"吉隆坡的新地标名称叫双峰塔（双子塔）。", a:["A"]},
+    {t:"judge", q:"郑和曾五次到访马六甲，现保留的“三保”景点指三保山、三保亭、三保井。", a:["A"]},
+    {t:"judge", q:"马来人传统礼服的名称叫纱笼。", a:["B"]},
+  ]},
+  { name:"老挝", qs:[
+    {t:"single", q:"老挝现国名全称为老挝人民民主共和国，于何时开始使用？", o:["1975年12月2日","1976年12月2日","1976年12月12日","1974年12月2日"], a:["A"]},
+    {t:"single", q:"老挝有“万象之邦”的美称，其源自？", o:["老挝动物中以大象为多","人民崇拜大象","运输以大象为主","以大象为吉祥物"], a:["A"]},
+    {t:"single", q:"老挝实行什么社会制度？", o:["社会主义制度","君主立宪制","共和制","资本主义"], a:["A"]},
+    {t:"single", q:"老挝国民信仰的宗教以何宗教为主？", o:["伊斯兰教","印度教","佛教","儒教"], a:["C"]},
+    {t:"single", q:"自1988年起，老挝开始推行什么路线？", o:["市场经济","革新路线","民主改革","计划经济体制"], a:["B"]},
+    {t:"multi", q:"老挝人喜食糯米，老挝菜特点是？", o:["酸、辣","生","苦味","甜"], a:["A","B"]},
+    {t:"multi", q:"拴线仪式是老龙族的祝福仪式，常在什么时候举行？", o:["逢年过节","欢迎贵宾","结婚喜庆","周末"], a:["A","B","C"]},
+    {t:"single", q:"1893年《法暹条约》后老挝沦为法国保护国，一直到何年？", o:["1955年","1954年","1945年"], a:["B"]},
+    {t:"single", q:"1706—1713年老挝分裂为3个王国，到18世纪70年代末都沦为哪个国家的属国？", o:["越南","泰国","柬埔寨"], a:["B"]},
+    {t:"single", q:"1991年10月，两国在北京签署了什么条约？", o:["《中老经济合作条约》","《中老文化交流条约》","《中老边界条约》"], a:["C"]},
+    {t:"single", q:"从1954年开始，老挝进行了长达多少年的抗美救国战争？", o:["30年","25年","20年"], a:["C"]},
+    {t:"single", q:"万象中心仿巴黎凯旋门而建的小凯旋门，建造目的是？", o:["庆祝老挝解放成功","纪念老挝人民顽强抵抗外国殖民者入侵","为吸引旅游"], a:["B"]},
+    {t:"multi", q:"老挝北部小城万荣被称为“小桂林”，主要源自？", o:["类似的喀斯特峰林地貌、清溪","稻田、溶洞","旅游项目也不无相似之处"], a:["A","B","C"]},
+    {t:"judge", q:"老挝万象有“月牙城”之称，源自城市沿湄公河而建以及呈月牙形。", a:["A"]},
+    {t:"judge", q:"1995年12月，老挝琅勃拉邦被联合国教科文组织列入世界历史遗产名录。", a:["A"]},
+    {t:"judge", q:"老挝新年泼水节是在1月1日过节。", a:["B"]},
+  ]},
+  { name:"柬埔寨", qs:[
+    {t:"single", q:"关于柬埔寨政体，如下说法正确的是？", o:["宪法规定国体是君主立宪制","实行总统制","实行共和制","实行社会主义制度"], a:["A"]},
+    {t:"single", q:"柬埔寨有20多个民族，其中何民族为主体民族？", o:["占族","高棉族","泰族","京族"], a:["B"]},
+    {t:"single", q:"1863年法国入侵柬埔寨，签订《法柬条约》，并宣布柬埔寨为何国保护国？", o:["英国","泰国","法国","美国"], a:["C"]},
+    {t:"single", q:"什么礼是柬埔寨最常见的相见礼仪？", o:["握手礼","拥抱礼","合十礼","举手礼"], a:["C"]},
+    {t:"single", q:"西哈努克城坐落于西南磅逊湾岸边，吸引游客观赏美丽的什么景色？", o:["海上日出","落日金色晚霞","白色海滩","城市建筑"], a:["B"]},
+    {t:"single", q:"2004年10月6日，西哈努克国王在何地宣布退位？", o:["巴黎","北京","上海","美国"], a:["B"]},
+    {t:"multi", q:"柬埔寨是东南亚历史最长的国家，从公元1世纪下半叶立国，历经扶南、真腊及哪个时期？", o:["吴哥","高棉","柬埔寨","民族独立"], a:["A","C"]},
+    {t:"multi", q:"柬埔寨境内有湄公河和东南亚最大的淡水湖？", o:["洞里萨湖","金边湖","吴哥湖","暹粒湖"], a:["A","B"]},
+    {t:"judge", q:"柬埔寨位于中南半岛，西部及西北部与泰国接壤，南部面向北部湾。", a:["B"]},
+    {t:"judge", q:"柬埔寨境内有着东南亚最大的淡水湖——洞里萨湖。", a:["A"]},
+    {t:"judge", q:"柬埔寨立国历经扶南、真腊及高棉时期。", a:["B"]},
+    {t:"judge", q:"光影剧《吴哥的微笑》由中国云南省和柬埔寨艺术家合作创作。", a:["A"]},
+  ]},
+  { name:"缅甸", qs:[
+    {t:"single", q:"缅甸的地图形状有点像？", o:["一块钻石","S形","A形","P型"], a:["A"]},
+    {t:"single", q:"缅甸首都是？", o:["仰光","内比都","万象","蒲甘"], a:["B"]},
+    {t:"single", q:"哪位将军在《赠缅甸友人》中用“我住江之头，君住江之尾……共饮一江水”形容中缅情谊？", o:["叶剑英","陈毅","朱德","周恩来"], a:["B"]},
+    {t:"single", q:"缅甸的世界和平塔位于？", o:["内比都","仰光","曼德勒","蒲甘"], a:["B"]},
+    {t:"single", q:"中缅街在我国境内称“中缅友谊街”，位于云南省的哪个地方？", o:["西双版纳","大理","瑞丽市","景洪"], a:["C"]},
+    {t:"single", q:"缅甸被誉为“佛塔之国”，其源于？", o:["全国共有大小佛塔10万多座","全国85%以上的人信奉佛教","佛塔多、庙宇多、和尚多是缅甸佛教文化三大特色","全民信仰佛教"], a:["C"]},
+    {t:"multi", q:"关于缅甸的地理位置，下列描述正确的是？", o:["位于东南亚，西临印度洋、西南临安达曼海","西北与印度和孟加拉相邻，东北与我国接壤","东南至印度","西南与越南相邻"], a:["A","B"]},
+    {t:"single", q:"1824年至1885年间，哪国先后发动3次侵缅战争并占领缅甸？", o:["英国","美国","法国","日本"], a:["A"]},
+    {t:"multi", q:"缅甸男人十分忌讳从晾晒的妇女筒裙底下钻过，理由是？", o:["认为这样会倒霉一辈子","缅甸人视妇女筒裙为不洁","认为男人忌讳女色","男人地位高"], a:["A","B"]},
+    {t:"judge", q:"缅甸是著名佛教国家，全国85%以上的人信奉佛教。", a:["A"]},
+    {t:"judge", q:"中缅街位于云南省瑞丽市。", a:["A"]},
+    {t:"judge", q:"缅甸素有“礼仪之邦”美称，见面礼节主要是握手礼。", a:["B"]},
+  ]},
+  { name:"新加坡", qs:[
+    {t:"single", q:"新加坡旧称新嘉坡、星洲或星岛，别称为？", o:["春城","狮城","花城","汉城"], a:["B"]},
+    {t:"single", q:"新加坡北隔柔佛海峡与哪个国家为邻？", o:["马来西亚","菲律宾","文莱","印尼"], a:["A"]},
+    {t:"single", q:"新加坡公民主要以4大族群区分，何民族占人口74.2%？", o:["马来人","华人","印度人","欧洲人"], a:["B"]},
+    {t:"single", q:"1965年9月21日加入联合国，同年10月新加坡加入哪个国家联邦？", o:["英联邦","马来西亚联邦","印支联邦","新加坡联邦"], a:["A"]},
+    {t:"single", q:"鱼尾狮塑像的设计灵感来自？", o:["新加坡历史记载","《马来纪年》的记载","新加坡古老传说","中国古老传说"], a:["B"]},
+    {t:"multi", q:"新加坡拥有“花园城市”美称，主要源于？", o:["自然生态保护得好","拥有繁多的绿色植物","每个角落都有大量树木鲜花，带来新鲜空气","公园多"], a:["A","B","C"]},
+    {t:"multi", q:"想亲身体验新加坡多元种族文化，可参观？", o:["马来传统文化馆","华裔馆","牛车水原貌馆","莱佛士音乐学院"], a:["A","B","C"]},
+    {t:"single", q:"《新加坡宪法》明定何语为新加坡国语？", o:["汉语","英语","马来语"], a:["C"]},
+    {t:"single", q:"1990年11月接替从1959年开始执政的李光耀，成为新加坡第二位总理的是？", o:["吴作栋","伊萨克","李显龙"], a:["A"]},
+    {t:"single", q:"1965年8月9日，新加坡脱离哪个国家成为有主权、民主和独立的国家？", o:["英国","美国","马来西亚"], a:["C"]},
+    {t:"single", q:"中国和新加坡建交时间是？", o:["1990年10月3日","1968年10月3日","1980年10月1日"], a:["A"]},
+    {t:"single", q:"到访新加坡，与印度人或马来人吃饭时，注意不要用？", o:["右手","左手","可随意"], a:["B"]},
+    {t:"single", q:"由于长期受英国影响，新加坡人见面和分手时都要？", o:["拥抱","握手","合十礼"], a:["B"]},
+    {t:"multi", q:"新加坡是美食天堂，其美食文化包括？", o:["中国美食","印度美食","马来西亚美食"], a:["A","B","C"]},
+    {t:"judge", q:"新加坡人文习俗保留了中华传统文化，也有本土形成的娘惹文化。", a:["A"]},
+    {t:"judge", q:"李光耀是新加坡第二位总理。", a:["B"]},
+  ]},
+  { name:"印度尼西亚", qs:[
+    {t:"single", q:"在殖民统治时期及共和国建立时期，印尼当局大力推行何政策？", o:["反共和排共","亲共","强迫信仰宗教","宗教自由"], a:["A"]},
+    {t:"single", q:"印尼人大多忌讳吃什么肉食品，忌饮烈性酒？", o:["羊肉","猪肉","牛肉","鱼"], a:["B"]},
+    {t:"single", q:"印尼无国教但规定一定要信仰宗教，国民中约88%信奉何宗教？", o:["佛教","伊斯兰教","基督教","儒教"], a:["B"]},
+    {t:"single", q:"在印尼，人们社交场合见面一般习惯行什么礼？", o:["拥抱礼","以握手为礼","合十礼","举手礼"], a:["B"]},
+    {t:"single", q:"印尼最令人神往、赤道上一颗闪亮之星的旅游岛是？", o:["巴里岛（巴厘岛）","雅加达","日惹","苏门答腊"], a:["A"]},
+    {t:"multi", q:"印尼成为世外桃源般度假乐园、世界级游览胜地，正确说法是？", o:["得天独厚的自然环境","孕育着高度文明的人文风情","丰富的海岛旅游资源","诱人的美食文化"], a:["A","B","C"]},
+    {t:"multi", q:"16世纪开始，今印尼群岛先后遭到葡萄牙、西班牙及哪几个国家侵入？", o:["荷兰","英国","日本","美国"], a:["A","B","C"]},
+    {t:"multi", q:"印尼别称“千岛之国”，其理由是？", o:["由上万个岛屿组成","全世界最大的群岛国家，疆域横跨亚洲及大洋洲","由一千个岛屿组成","岛屿超过1千个"], a:["A","B"]},
+    {t:"multi", q:"印度尼西亚历史悠久，哪几个岛是古代文明主要发源地？", o:["爪哇岛","苏门答腊岛","雅加达","巴里岛"], a:["A","B"]},
+    {t:"multi", q:"进入20世纪60年代后，印尼仍经常发生较大规模的何种动乱？", o:["反华","排华","反美","反政府"], a:["A","B"]},
+    {t:"single", q:"中爪哇的千年古塔被列入世界文化遗产名录，古塔名称是？", o:["婆罗浮屠佛塔","苏门佛塔","班南佛塔"], a:["A"]},
+    {t:"single", q:"北苏门答腊境内的东南亚第一大淡水湖叫什么名字？", o:["多巴湖","亚山湖","苏门湖"], a:["A"]},
+    {t:"judge", q:"印尼由上万个岛屿组成，是全世界最大的群岛国家，疆域横跨亚洲及大洋洲。", a:["A"]},
+    {t:"judge", q:"2015年印尼总人口2.5287亿，仅次于中国、印度、俄罗斯，居世界第四位。", a:["B"]},
+    {t:"judge", q:"16世纪开始，印尼群岛先后遭到葡萄牙、西班牙及美国的侵入。", a:["B"]},
+    {t:"judge", q:"在印度尼西亚人的心目中，对牛有着崇高的地位。", a:["B"]},
+  ]},
+  { name:"文莱 · 菲律宾 · 一带一路", qs:[
+    {t:"single", q:"文莱位于加里曼丹岛西北部，北濒中国南海，东南西三面与哪个国家接壤？", o:["新加坡","马来西亚","菲律宾"], a:["B"]},
+    {t:"single", q:"文莱为穆斯林国家，什么节是其最盛大的节日？", o:["开斋节","圣诞节","元旦节"], a:["A"]},
+    {t:"single", q:"文莱国徽中心为一轮上弯的新月，象征文莱信奉何宗教？", o:["基督教","佛教","伊斯兰教"], a:["C"]},
+    {t:"single", q:"文莱全名文莱达鲁萨兰国，是一个实行什么制度的国家？", o:["民主制度","共和制","君主专制"], a:["C"]},
+    {t:"single", q:"菲律宾民族英雄何塞·黎萨尔和历任三位总统的祖先是哪国人？", o:["中国人","美国人","英国人","西班牙人"], a:["A"]},
+    {t:"multi", q:"菲律宾被誉为“西太平洋明珠”，原因是？", o:["有7107个大小岛屿","岛屿星罗棋布镶嵌在西太平洋万顷碧波上","岛屿像一串串明珠"], a:["A","B","C"]},
+    {t:"single", q:"苏比克湾曾是哪个国家在海外最大的太平洋舰队基地？", o:["西班牙","日本","美国"], a:["C"]},
+    {t:"single", q:"菲律宾首都是？", o:["吕宋岛","马尼拉","宿务"], a:["B"]},
+    {t:"single", q:"宿务是菲律宾最早开发的城市，被誉为“南方皇后市”，素有？", o:["“度假伊甸园”","“度假乐园”","“情人乐园”"], a:["A"]},
+    {t:"judge", q:"在历史上，菲律宾曾被英国长期统治。", a:["B"]},
+    {t:"single", q:"海上丝绸之路起源于哪个朝代，昌盛于明朝？", o:["汉朝","唐朝","宋朝","清朝"], a:["A"]},
+    {t:"single", q:"2013年秋，习近平主席在访问哪个国家期间提出共建21世纪海上丝绸之路？", o:["印度尼西亚","马来西亚","泰国","新加坡"], a:["A"]},
+    {t:"single", q:"中国与东盟自哪一年开启对话进程？", o:["1991年","2001年","2003年","2010年"], a:["A"]},
+    {t:"judge", q:"2021年，中国与东盟宣布建立全面战略伙伴关系。", a:["A"]},
+  ]}
+  ]
+},
+{
+  id:"py", name:"Python语言基础与应用",
+  chapters:[
+  { name:"一、引言与语言概览", qs:[
+    {t:"single", q:"Python 语言属于下列哪一类？", o:["汇编语言","机器语言","高级语言","自然语言"], a:["C"]},
+    {t:"single", q:"Python 源代码程序文件的主要扩展名是？", o:[".c",".py",".java",".exe"], a:["B"]},
+    {t:"single", q:"Python 中单行注释使用的符号是？", o:["//","#","--","/*"], a:["B"]},
+    {t:"single", q:"Python 中多行字符串（文档字符串）使用什么定义？", o:["// 行注释","三个引号 \"\"\" 或 '''","{} 大括号","() 小括号"], a:["B"]},
+    {t:"single", q:"Python 用来表示代码块层次结构的是？", o:["大括号 {}", "括号 ()", "缩进（空格）", "分号 ;"], a:["C"]},
+    {t:"single", q:"下列哪个不能作为 Python 变量名的开头？", o:["字母","下划线 _","数字","汉字"], a:["C"]},
+    {t:"judge", q:"Python 中的变量名区分大小写。", a:["A"]},
+    {t:"judge", q:"Python 3.x 完全兼容 Python 2.x。", a:["B"]},
+    {t:"judge", q:"Python 是一种跨平台、开源、免费的高级动态编程语言。", a:["A"]},
+    {t:"single", q:"Python 3 源代码文件默认采用的字符编码是？", o:["GBK","UTF-8","ASCII","Big5"], a:["B"]},
+  ]},
+  { name:"二、基本数据类型", qs:[
+    {t:"single", q:"表达式 type(3+4j) 的结果是？", o:["int","float","complex","bool"], a:["C"]},
+    {t:"single", q:"下列哪个是 Python 中的布尔类型值？", o:["yes","True","1","null"], a:["B"]},
+    {t:"single", q:"在 Python 中，用于计算字符串字符个数的函数是？", o:["len()","size()","count()","length()"], a:["A"]},
+    {t:"single", q:"表达式 isinstance('abc', str) 的值为？", o:["False","True","报错","'str'"], a:["B"]},
+    {t:"single", q:"下列哪种类型是不可变类型？", o:["列表 list","字典 dict","元组 tuple","集合 set"], a:["C"]},
+    {t:"single", q:"input() 函数从键盘读入的数据默认是什么类型？", o:["int","float","str","bool"], a:["C"]},
+    {t:"single", q:"eval('3+4') 的返回结果是？", o:["'3+4'","7","'7'","报错"], a:["B"]},
+    {t:"single", q:"字符串 s=\"abcdefghijklmn\"，print(s[1:10:3]) 的输出是？", o:["behk","adgj","beh","adg"], a:["A"]},
+    {t:"judge", q:"列表是可变的，元组是不可变的。", a:["A"]},
+    {t:"judge", q:"Python 中字符串索引从 1 开始。", a:["B"]},
+    {t:"judge", q:"bool 类型是 int 类型的子类，True 等价于 1，False 等价于 0。", a:["A"]},
+    {t:"single", q:"Python 中表示空类型（空值）的关键字是？", o:["0","null","None","void"], a:["C"]},
+  ]},
+  { name:"三、容器类型", qs:[
+    {t:"single", q:"下列哪个字面量表示空字典？", o:["[]","()","{}","set()"], a:["C"]},
+    {t:"single", q:"下列哪个表示空元组？", o:["[]","()","{}","<>"], a:["B"]},
+    {t:"single", q:"字典中存储数据的方式是？", o:["顺序排列","键值对","字符序列","索引数组"], a:["B"]},
+    {t:"single", q:"关于字典的键，下列说法正确的是？", o:["键可以重复","键必须唯一且不可变","键可以是列表","键没有限制"], a:["B"]},
+    {t:"single", q:"集合（set）的主要特点是？", o:["有序且可重复","无序且元素不重复","键值对存储","元素不可删除"], a:["B"]},
+    {t:"single", q:"字典 d={'abc':1,'qwe':2,'zxc':3}，len(d) 的结果为？", o:["1","2","3","6"], a:["C"]},
+    {t:"single", q:"在列表末尾添加一个元素，应使用的方法是？", o:["append()","extend()","insert()","sort()"], a:["A"]},
+    {t:"single", q:"把另一个列表的所有元素并入当前列表，应使用？", o:["append()","extend()","push()","add()"], a:["B"]},
+    {t:"multi", q:"下列可以用来遍历字典的方式有？", o:["for key in dict","for value in dict.values()","for k,v in dict.items()","for item in dict.keys()"], a:["A","B","C"]},
+    {t:"judge", q:"列表、元组、字符串都是有序序列。", a:["A"]},
+    {t:"judge", q:"字典的键可以是一个列表。", a:["B"]},
+  ]},
+  { name:"四、计算与控制流", qs:[
+    {t:"single", q:"Python 中描述多分支结构的语句是？", o:["if-else","if-elif-else","switch-case","for-while"], a:["B"]},
+    {t:"single", q:"break 语句的作用是？", o:["跳过本次循环","跳出最内层循环","结束程序","跳出函数"], a:["B"]},
+    {t:"single", q:"continue 语句的作用是？", o:["跳出整个循环","跳过本次循环剩余语句，进入下一次循环","终止程序","返回函数值"], a:["B"]},
+    {t:"single", q:"Python 3 中 3/2 的运算结果是？", o:["1","1.5","2","1.0"], a:["B"]},
+    {t:"single", q:"Python 中用于整除的运算符是？", o:["/","//","%","**"], a:["B"]},
+    {t:"single", q:"取余（求模）运算符是？", o:["/","//","%","div"], a:["C"]},
+    {t:"single", q:"下列哪个是逻辑“非”运算符？", o:["and","or","not","!"], a:["C"]},
+    {t:"single", q:"range(2,10) 生成的整数个数是？", o:["7","8","9","10"], a:["B"]},
+    {t:"judge", q:"循环可以嵌套使用，for 中可以再有 for，while 中也可以有 for。", a:["A"]},
+    {t:"judge", q:"Python 通过缩进区分代码层次，缩进错误会抛出 IndentationError。", a:["A"]},
+  ]},
+  { name:"五、函数", qs:[
+    {t:"single", q:"Python 中定义函数使用的关键字是？", o:["function","def","func","define"], a:["B"]},
+    {t:"single", q:"定义匿名函数应使用？", o:["def","lambda","anon","function"], a:["B"]},
+    {t:"single", q:"函数没有 return 语句时，默认返回？", o:["0","None","空字符串","报错"], a:["B"]},
+    {t:"single", q:"用于接收任意多个位置参数的形式是？", o:["*args","**kwargs","args","kwargs"], a:["A"]},
+    {t:"single", q:"用于接收任意多个关键字参数的形式是？", o:["*args","**kwargs","*kw","**arg"], a:["B"]},
+    {t:"single", q:"在函数内部声明使用全局变量，应使用关键字？", o:["global","local","public","static"], a:["A"]},
+    {t:"judge", q:"Python 中函数可以嵌套定义，也可以作为参数传递给其他函数。", a:["A"]},
+    {t:"judge", q:"默认参数必须放在位置参数之后。", a:["A"]},
+    {t:"single", q:"def Sum(a,b=3,c=5): return a+b+c，调用 Sum(8) 的返回值是？", o:["13","16","15","8"], a:["B"]},
+  ]},
+  { name:"六、基本扩展模块与文件", qs:[
+    {t:"single", q:"导入标准库模块应使用的关键字是？", o:["include","import","using","require"], a:["B"]},
+    {t:"single", q:"math 模块中用来计算平方根的函数是？", o:["sqrt()","pow()","root()","abs()"], a:["A"]},
+    {t:"single", q:"用于生成随机数的标准库是？", o:["random","rand","generator","time"], a:["A"]},
+    {t:"single", q:"open(\"file.txt\",\"r\") 中 \"r\" 表示？", o:["写入","读取","追加","创建"], a:["B"]},
+    {t:"single", q:"以追加方式打开文件应使用的模式是？", o:["r","w","a","x"], a:["C"]},
+    {t:"single", q:"Python 中用于捕获并处理异常的语句结构是？", o:["if-else","try-except","switch-case","raise"], a:["B"]},
+    {t:"judge", q:"无论是否发生异常，finally 语句块中的代码都会执行。", a:["A"]},
+    {t:"judge", q:"文件操作结束后通常应调用 close() 关闭文件对象。", a:["A"]},
+  ]},
+  { name:"七、面向对象与高级特性", qs:[
+    {t:"single", q:"Python 中定义类使用的关键字是？", o:["struct","class","def","object"], a:["B"]},
+    {t:"single", q:"类的初始化（构造）方法名称是？", o:["init()","__init__()","constructor()","new()"], a:["B"]},
+    {t:"single", q:"实例方法的第一个参数通常代表实例本身，它是？", o:["cls","self","this","instance"], a:["B"]},
+    {t:"single", q:"类方法装饰器是？", o:["@property","@classmethod","@staticmethod","@abstract"], a:["B"]},
+    {t:"single", q:"判断一个对象是否属于某个类，应使用？", o:["type()","isinstance()","issubclass()","id()"], a:["B"]},
+    {t:"single", q:"在派生类中调用基类同名方法，常用？", o:["base()","super()","parent()","this()"], a:["B"]},
+    {t:"multi", q:"下列属于面向对象编程基本特性的有？", o:["封装","继承","多态","编译"], a:["A","B","C"]},
+    {t:"single", q:"用于定义生成器函数、逐个产生值的关键字是？", o:["return","yield","async","break"], a:["B"]},
+    {t:"single", q:"主动抛出一个异常应使用的关键字是？", o:["throw","raise","except","error"], a:["B"]},
+    {t:"judge", q:"子类可以继承父类的属性和方法，并可以重写父类方法。", a:["A"]},
+    {t:"judge", q:"生成器函数中使用 yield，每次调用会返回一个迭代器并按需产生值。", a:["A"]},
+  ]}
+  ]
+}
+];
+</script>
+<script>
+(function(){
+  const KEY = "quiz_py_asean_v1";
+  const LETTERS = ["A","B","C","D","E"];
+  let wrong = {};
+  try{ wrong = JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ wrong = {}; }
+  function saveWrong(){ try{ localStorage.setItem(KEY, JSON.stringify(wrong)); }catch(e){} }
+
+  // 扁平化全部题目
+  const ALL = [];
+  DATA.forEach((c,ci)=>c.chapters.forEach((ch,hi)=>ch.qs.forEach((q,qi)=>{
+    ALL.push({qid:ci+"-"+hi+"-"+qi, cid:c.id, course:c.name, chapter:ch.name,
+      type:q.t, q:q.q, o:q.o, a:q.a});
+  })));
+
+  const state = {
+    view:"quiz", course:"all", chapter:"all",
+    pool:[], pos:0, sel:[], revealed:false, answered:false, lastCorrect:false
+  };
+
+  const $ = id=>document.getElementById(id);
+  const main = $("main"), courseChips=$("courseChips"), chapterChips=$("chapterChips");
+
+  function syncTab(){
+    document.querySelectorAll(".tabbar button").forEach(b=>b.classList.toggle("active", b.dataset.tab===state.view));
+  }
+
+  function shuffle(arr){
+    const a=arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function currentPool(){
+    let list = ALL.slice();
+    if(state.course!=="all") list = list.filter(x=>x.cid===state.course);
+    if(state.chapter!=="all") list = list.filter(x=>x.chapter===state.chapter);
+    return list;
+  }
+
+  function typeLabel(t){ return t==="single"?"单选":t==="multi"?"多选":"判断"; }
+
+  // ---------- 顶部 chips ----------
+  function renderCourseChips(){
+    const items=[{id:"all",name:"全部课程"}].concat(DATA.map(c=>({id:c.id,name:c.name})));
+    courseChips.innerHTML = items.map(it=>
+      `<div class="chip ${state.course===it.id?"active":""}" data-course="${it.id}">${it.name}</div>`).join("");
+    [...courseChips.children].forEach(el=>el.onclick=()=>{
+      state.course=el.dataset.course; state.chapter="all";
+      state.view="quiz"; syncTab(); startQuiz();
+    });
+  }
+  function renderChapterChips(){
+    let names=["全部章节"];
+    if(state.course==="all"){
+      // 跨课程时不显示章节细分
+      chapterChips.innerHTML=""; return;
+    }
+    const c = DATA.find(x=>x.id===state.course);
+    names = names.concat(c.chapters.map(ch=>ch.name));
+    chapterChips.innerHTML = names.map(n=>
+      `<div class="chip ${state.chapter===n?"active":""}" data-ch="${n}">${n}</div>`).join("");
+    [...chapterChips.children].forEach(el=>el.onclick=()=>{
+      state.chapter=el.dataset.ch==="全部章节"?"all":el.dataset.ch;
+      state.view="quiz"; syncTab(); startQuiz();
+    });
+  }
+
+  // ---------- 刷题 ----------
+  function startQuiz(){
+    state.pool = shuffle(currentPool());
+    state.pos=0; state.revealed=false; state.answered=false; state.sel=[];
+    renderChapterChips();
+    if(state.view==="quiz") renderQuiz();
+  }
+
+  function renderQuiz(){
+    renderCourseChips(); renderChapterChips();
+    if(state.pool.length===0){ main.innerHTML=`<div class="empty">当前范围暂无题目</div>`; return; }
+    const q = state.pool[state.pos];
+    const opts = q.type==="judge" ? ["正确","错误"] : q.o;
+    const optHtml = opts.map((text,i)=>{
+      const L=LETTERS[i];
+      let cls="opt";
+      if(state.answered){
+        if(q.a.includes(L)) cls+=" correct";
+        else if(state.sel.includes(L)) cls+=" wrong";
+        cls+=" disabled";
+      }else if(state.sel.includes(L)) cls+=" sel";
+      return `<div class="${cls}" data-l="${L}">
+        <span class="key">${q.type==="judge"?(L==="A"?"✓":"✕"):L}</span><span>${text}</span></div>`;
+    }).join("");
+
+    const pct = Math.round((state.pos)/state.pool.length*100);
+    main.innerHTML = `
+      <div class="card">
+        <div class="meta">
+          <span class="tag ${q.type==='judge'?'judge':q.type==='multi'?'multi':''}">${typeLabel(q.type)}</span>
+          <span class="qno">${q.course} · ${q.chapter}</span>
+        </div>
+        <div class="progress"><i style="width:${pct}%"></i></div>
+        <div class="qtext">${state.pos+1}. ${q.q}</div>
+        <div class="opts">${optHtml}</div>
+        <div class="answer-box ${state.revealed?"show":""}">
+          <div>正确答案：<span class="ans">${q.a.join("、")}</span></div>
+          <div class="note">${state.answered?(state.lastCorrect?"✓ 回答正确":"✗ 回答错误，已收入错题本"):""}</div>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrev" ${state.pos===0?"disabled":""}>上一题</button>
+          ${state.answered
+            ? `<button class="btn primary" id="btnNext">${state.pos===state.pool.length-1?"完成":"下一题"}</button>`
+            : `<button class="btn primary" id="btnSubmit">${q.type==="multi"?"提交答案":"显示答案"}</button>`}
+        </div>
+      </div>`;
+
+    // 选项点击
+    [...main.querySelectorAll(".opt")].forEach(el=>{
+      el.onclick=()=>{
+        if(state.answered) return;
+        const L=el.dataset.l;
+        if(q.type==="single"||q.type==="judge"){ state.sel=[L]; reveal(); }
+        else{
+          state.sel = state.sel.includes(L)? state.sel.filter(x=>x!==L) : state.sel.concat(L);
+          renderQuizKeep();
+        }
+      };
+    });
+    const prev=$("btnPrev"), next=$("btnNext"), sub=$("btnSubmit");
+    if(prev) prev.onclick=()=>{ state.pos--; state.sel=[]; state.revealed=false; state.answered=false; renderQuiz(); };
+    if(next) next.onclick=()=>{ state.pos++; state.sel=[]; state.revealed=false; state.answered=false; renderQuiz(); };
+    if(sub) sub.onclick=()=>{
+      if(q.type==="multi" && state.sel.length===0){ alert("请先选择选项"); return; }
+      reveal();
+    };
+  }
+
+  function renderQuizKeep(){
+    // 多选选择时局部刷新选项高亮
+    const q=state.pool[state.pos];
+    [...main.querySelectorAll(".opt")].forEach(el=>{
+      const L=el.dataset.l;
+      el.classList.toggle("sel", state.sel.includes(L));
+    });
+  }
+
+  function reveal(){
+    const q=state.pool[state.pos];
+    const ok = state.sel.slice().sort().join()===q.a.slice().sort().join();
+    state.answered=true; state.revealed=true; state.lastCorrect=ok;
+    if(ok){ delete wrong[q.qid]; }
+    else{
+      wrong[q.qid] = {qid:q.qid, course:q.course, chapter:q.chapter, type:q.type, q:q.q, o:q.o, a:q.a,
+        count:(wrong[q.qid]?wrong[q.qid].count+1:1)};
+    }
+    saveWrong();
+    renderQuiz();
+  }
+
+  // ---------- 错题本 ----------
+  function renderWrong(){
+    renderCourseChips(); chapterChips.innerHTML="";
+    const list = Object.values(wrong);
+    if(list.length===0){ main.innerHTML=`<div class="empty">还没有错题，去刷一刷吧 🎉</div>`; return; }
+    main.innerHTML = `<div class="card"><div class="qtext">错题本（共 ${list.length} 题，答错次数已记录）</div></div>` +
+      list.map(item=>{
+        const opts = item.type==="judge"?["正确","错误"]:item.o;
+        const rows = opts.map((t,i)=>{
+          const L=LETTERS[i];
+          const cls=item.a.includes(L)?"correct":"";
+          return `<div class="opt disabled ${cls}"><span class="key">${item.type==="judge"?(L==="A"?"✓":"✕"):L}</span><span>${t}</span></div>`;
+        }).join("");
+        return `<div class="card">
+          <div class="meta"><span class="tag ${item.type==='judge'?'judge':item.type==='multi'?'multi':''}">${typeLabel(item.type)}</span>
+          <span class="qno">${item.course} · ${item.chapter} · 错 ${item.count} 次</span></div>
+          <div class="qtext">${item.q}</div>
+          <div class="opts">${rows}</div>
+          <div class="answer-box show"><div>正确答案：<span class="ans">${item.a.join("、")}</span></div></div>
+          <div class="actions"><button class="btn warn" data-del="${item.qid}">移出错题本</button></div>
+        </div>`;
+      }).join("");
+    [...main.querySelectorAll("[data-del]")].forEach(b=>b.onclick=()=>{
+      delete wrong[b.dataset.del]; saveWrong(); renderWrong();
+    });
+  }
+
+  // ---------- 章节弹层 ----------
+  function renderSheet(){
+    const mask=$("sheetMask"), sheet=$("chapterSheet");
+    let items=[];
+    if(state.course==="all"){
+      items = DATA.map(c=>({name:c.name, cnt:ALL.filter(x=>x.cid===c.id).length}));
+    }else{
+      const c=DATA.find(x=>x.id===state.course);
+      items = [{name:"全部章节", cnt:ALL.filter(x=>x.cid===c.id).length}]
+        .concat(c.chapters.map(ch=>({name:ch.name, cnt:ch.qs.length})));
+    }
+    sheet.innerHTML = `<h3>选择章节 / 课程</h3>` + items.map(it=>
+      `<div class="item" data-name="${it.name}"><span>${it.name}</span><span class="cnt">${it.cnt} 题</span></div>`).join("");
+    [...sheet.querySelectorAll(".item")].forEach(el=>el.onclick=()=>{
+      const n=el.dataset.name;
+      if(state.course==="all"){ const c=DATA.find(x=>x.name===n); state.course=c.id; state.chapter="all"; }
+      else{ state.chapter = n==="全部章节"?"all":n; }
+      closeSheet(); startQuiz();
+    });
+    mask.classList.add("show"); sheet.classList.add("show");
+  }
+  function closeSheet(){ $("sheetMask").classList.remove("show"); $("chapterSheet").classList.remove("show"); }
+  $("sheetMask").onclick=closeSheet;
+
+  // ---------- 统计 ----------
+  function renderStat(){
+    renderCourseChips(); chapterChips.innerHTML="";
+    const total=ALL.length;
+    const wn=Object.keys(wrong).length;
+    const answered=ALL.length-wn; // 粗粒度：错题数之外视为已掌握
+    const rate = total? Math.round((answered/total)*100):0;
+    const byCourse = DATA.map(c=>{
+      const qs=ALL.filter(x=>x.cid===c.id);
+      const w=qs.filter(x=>wrong[x.qid]).length;
+      return {name:c.name, total:qs.length, w};
+    });
+    main.innerHTML = `
+      <div class="stat-row">
+        <div class="stat-box"><div class="num">${total}</div><div class="lbl">题目总数</div></div>
+        <div class="stat-box"><div class="num">${wn}</div><div class="lbl">错题</div></div>
+        <div class="stat-box"><div class="num">${rate}%</div><div class="lbl">掌握度</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        ${byCourse.map(b=>`<div class="item" style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)">
+          <span>${b.name}</span><span class="qno">${b.total} 题 · 错 ${b.w}</span></div>`).join("")}
+      </div>
+      <div class="empty" style="padding-top:24px">错题与进度保存在本机浏览器，清除缓存会重置</div>`;
+  }
+
+  // ---------- Tab 切换 ----------
+  document.querySelectorAll(".tabbar button").forEach(btn=>{
+    btn.onclick=()=>{
+      state.view=btn.dataset.tab; syncTab();
+      if(state.view==="quiz") startQuiz();
+      else if(state.view==="wrong") renderWrong();
+      else if(state.view==="chapter") renderSheet();
+      else renderStat();
+    };
+  });
+
+  startQuiz();
+})();
+</script>
+</body>
+</html>
