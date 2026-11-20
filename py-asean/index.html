@@ -69,6 +69,27 @@
   .btn.warn{background:var(--bad-soft); color:var(--bad);}
   .progress{height:6px; background:#e9edf5; border-radius:6px; overflow:hidden; margin:6px 0 14px;}
   .progress i{display:block; height:100%; background:var(--brand); width:0; transition:width .25s;}
+  .jump-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 0 12px;}
+  .jump-row .qno{font-size:13px; color:var(--sub);}
+  .jump-btn{
+    min-height:40px; padding:0 14px; border:1px solid var(--brand); background:#fff; color:var(--brand);
+    border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .legend{display:flex; gap:16px; margin:6px 0 14px; font-size:12px; color:var(--sub);}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .lg{display:inline-block; width:12px; height:12px; border-radius:4px;}
+  .lg.undone{background:#f0f2f7; border:1px solid var(--line);}
+  .lg.right{background:var(--ok-soft); border:1px solid var(--ok);}
+  .lg.wrong{background:var(--bad-soft); border:1px solid var(--bad);}
+  .qgrid{display:grid; grid-template-columns:repeat(6,1fr); gap:10px;}
+  .qitem{
+    min-height:44px; border:1px solid var(--line); background:#fff; border-radius:11px;
+    font-size:14px; font-weight:600; color:var(--ink); cursor:pointer;
+  }
+  .qitem.right{background:var(--ok-soft); color:var(--ok); border-color:var(--ok);}
+  .qitem.wrong{background:var(--bad-soft); color:var(--bad); border-color:var(--bad);}
+  .qitem.current{outline:2px solid var(--brand);}
+  @media (max-width:380px){ .qgrid{grid-template-columns:repeat(5,1fr);} }
   .stat-row{display:flex; gap:10px;}
   .stat-box{flex:1; background:#fff; border-radius:14px; padding:16px 12px; text-align:center;}
   .stat-box .num{font-size:22px; font-weight:700; color:var(--brand);}
@@ -137,6 +158,7 @@
 
 <div class="sheet-mask" id="sheetMask"></div>
 <div class="sheet" id="chapterSheet"></div>
+<div class="sheet" id="listSheet"></div>
 
 <script>
 /* ===================== 题库数据 =====================
@@ -456,7 +478,8 @@ const DATA = [
 
   const state = {
     view:"quiz", course:"all", chapter:"all",
-    pool:[], pos:0, sel:[], revealed:false, answered:false, lastCorrect:false
+    pool:[], pos:0, sel:[], revealed:false, answered:false, lastCorrect:false,
+    status:{} // qid -> right / wrong，本次刷题轨迹
   };
 
   const $ = id=>document.getElementById(id);
@@ -510,7 +533,7 @@ const DATA = [
   // ---------- 刷题 ----------
   function startQuiz(){
     state.pool = shuffle(currentPool());
-    state.pos=0; state.revealed=false; state.answered=false; state.sel=[];
+    state.pos=0; state.revealed=false; state.answered=false; state.sel=[]; state.status={};
     renderChapterChips();
     if(state.view==="quiz") renderQuiz();
   }
@@ -540,6 +563,10 @@ const DATA = [
           <span class="qno">${q.course} · ${q.chapter}</span>
         </div>
         <div class="progress"><i style="width:${pct}%"></i></div>
+        <div class="jump-row">
+          <span class="qno">第 ${state.pos+1} / ${state.pool.length} 题</span>
+          <button class="jump-btn" id="btnList">题号目录</button>
+        </div>
         <div class="qtext">${state.pos+1}. ${q.q}</div>
         <div class="opts">${optHtml}</div>
         <div class="answer-box ${state.revealed?"show":""}">
@@ -566,13 +593,42 @@ const DATA = [
         }
       };
     });
-    const prev=$("btnPrev"), next=$("btnNext"), sub=$("btnSubmit");
+    const prev=$("btnPrev"), next=$("btnNext"), sub=$("btnSubmit"), lst=$("btnList");
     if(prev) prev.onclick=()=>{ state.pos--; state.sel=[]; state.revealed=false; state.answered=false; renderQuiz(); };
     if(next) next.onclick=()=>{ state.pos++; state.sel=[]; state.revealed=false; state.answered=false; renderQuiz(); };
     if(sub) sub.onclick=()=>{
       if(q.type==="multi" && state.sel.length===0){ alert("请先选择选项"); return; }
       reveal();
     };
+    if(lst) lst.onclick=renderListSheet;
+  }
+
+  function jumpTo(i){
+    if(isNaN(i)||i<0||i>=state.pool.length) return;
+    state.pos=i; state.sel=[]; state.revealed=false; state.answered=false;
+    closeSheet(); renderQuiz();
+  }
+
+  // ---------- 题号目录弹层 ----------
+  function renderListSheet(){
+    const sheet=$("listSheet"), mask=$("sheetMask");
+    const done=Object.keys(state.status).length;
+    sheet.innerHTML = `
+      <h3>题号目录 <span class="qno">已做 ${done} / ${state.pool.length}</span></h3>
+      <div class="legend">
+        <span><i class="lg undone"></i>未做</span>
+        <span><i class="lg right"></i>答对</span>
+        <span><i class="lg wrong"></i>答错</span>
+      </div>
+      <div class="qgrid">
+        ${state.pool.map((q,i)=>{
+          const st=state.status[q.qid]||"undone";
+          const cur=i===state.pos?" current":"";
+          return `<button class="qitem ${st}${cur}" data-i="${i}">${i+1}</button>`;
+        }).join("")}
+      </div>`;
+    [...sheet.querySelectorAll(".qitem")].forEach(el=>el.onclick=()=>jumpTo(+el.dataset.i));
+    mask.classList.add("show"); sheet.classList.add("show");
   }
 
   function renderQuizKeep(){
@@ -588,6 +644,7 @@ const DATA = [
     const q=state.pool[state.pos];
     const ok = state.sel.slice().sort().join()===q.a.slice().sort().join();
     state.answered=true; state.revealed=true; state.lastCorrect=ok;
+    state.status[q.qid] = ok?"right":"wrong";
     if(ok){ delete wrong[q.qid]; }
     else{
       wrong[q.qid] = {qid:q.qid, course:q.course, chapter:q.chapter, type:q.type, q:q.q, o:q.o, a:q.a,
@@ -645,7 +702,11 @@ const DATA = [
     });
     mask.classList.add("show"); sheet.classList.add("show");
   }
-  function closeSheet(){ $("sheetMask").classList.remove("show"); $("chapterSheet").classList.remove("show"); }
+  function closeSheet(){
+    $("sheetMask").classList.remove("show");
+    $("chapterSheet").classList.remove("show");
+    $("listSheet").classList.remove("show");
+  }
   $("sheetMask").onclick=closeSheet;
 
   // ---------- 统计 ----------
